@@ -285,6 +285,27 @@
   background: transparent !important;
 }
 
+.custom-map-toggle {
+  background: var(--button-bg);
+  color: var(--text-color);
+  border: 1.5px solid var(--input-border);
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent-glow);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  margin: 10px;
+  font-size: 15px;
+  user-select: none;
+}
+
+.custom-map-toggle:hover {
+  background: var(--button-hover-bg);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+
 
     
   </style>
@@ -426,15 +447,48 @@ async function loadSavedMarkers() {
 
 
 
-  const map = L.map('map').setView([34.4208, -119.6982], 13);
-  let lastGridSize = getGridSize(map.getZoom());
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+  const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-  }).addTo(map);
+    attribution: '© OpenStreetMap'
+  });
 
+  const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' +
+    'World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: '© Esri'
+  });
+
+  const map = L.map('map', {
+    center: [34.0522, -118.2437], // replace with your default coordinates
+    zoom: 13,
+    layers: [osmLayer] // default layer
+  }).setView([34.4208, -119.6982], 13);
+  let lastGridSize = getGridSize(map.getZoom());
+ 
   map.zoomControl.setPosition('bottomright');
+
+
+  const toggleBtn = L.control({ position: 'bottomleft' });
+
+  toggleBtn.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'custom-map-toggle');
+    div.innerHTML = '🗺️ Switch Map';
+    div.onclick = function() {
+      if (map.hasLayer(osmLayer)) {
+        map.removeLayer(osmLayer);
+        map.addLayer(satelliteLayer);
+      } else {
+        map.removeLayer(satelliteLayer);
+        map.addLayer(osmLayer);
+      }
+    };
+    return div;
+  };
+
+  toggleBtn.addTo(map);
+
+
 
   const geocoderControl = L.Control.geocoder({
     defaultMarkGeocode: false,
@@ -444,7 +498,9 @@ async function loadSavedMarkers() {
     const bounds = [[bbox.getSouth(), bbox.getWest()], [bbox.getNorth(), bbox.getEast()]];
     map.fitBounds(bounds);
   });
-  geocoderControl.addTo(map);
+  // geocoderControl.addTo(map);
+  geocoderControl.onAdd(map); // create element
+  document.getElementById('geocoder-container').appendChild(geocoderControl.onAdd(map));
 
   const geocoderElem = document.querySelector('.leaflet-control-geocoder');
   const geocoderContainer = document.getElementById('geocoder-container');
