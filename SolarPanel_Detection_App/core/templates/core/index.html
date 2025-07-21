@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solar Tile Selector - Dual View</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <style>
+    :root {
+      --bg-color: #121212;
+      --header-bg: #1f1f1f;
+      --text-color: #f0f0f0;
+      --accent-color: #4ade80;
+      --accent-glow: rgba(74, 222, 128, 0.7);
+      --button-bg: #292929;
+      --button-hover-bg: #3b3b3b;
+      --button-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+      --input-bg: #222;
+      --input-border: #444;
+      --input-focus-border: #4ade80;
+      --tile-stroke: #4ade80;
+      --tile-fill: rgba(74, 222, 128, 0.15);
+      --tile-fill-selected: rgba(74, 222, 128, 0.55);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0; padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden;
+      user-select: none;
+    }
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 64px;
+      background: var(--header-bg);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+      border-bottom: 1px solid #222;
+      z-index: 10000;
+    }
+    #geocoder-container {
+      flex: 1;
+      max-width: 400px;
+      position: relative;
+      margin-right: 24px;
+    }
+    .leaflet-control-geocoder {
+      width: 100% !important;
+      background-color: var(--input-bg);
+      border: 1.5px solid var(--input-border);
+      border-radius: 8px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.7);
+      padding: 4px 12px;
+      transition: border-color 0.3s ease;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .leaflet-control-geocoder:focus-within {
+      border-color: var(--input-focus-border);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .leaflet-control-geocoder-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      position: relative;
+    }
+    .leaflet-control-geocoder-form input {
+      flex-grow: 1;
+      padding-left: 38px !important;
+      font-size: 16px;
+      height: 36px;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
+      outline: none;
+      border-radius: 6px;
+      box-shadow: none !important;
+    }
+    .leaflet-control-geocoder-icon {
+      position: absolute !important;
+      left: 12px !important;
+      top: 50% !important;
+      transform: translateY(-50%);
+      width: 16px !important;
+      height: 16px !important;
+      fill: var(--accent-color) !important;
+      pointer-events: none;
+      filter: drop-shadow(0 0 1px var(--accent-glow));
+    }
+    .leaflet-control-geocoder-form button {
+      background: var(--button-bg);
+      color: var(--text-color);
+      border: 1.5px solid var(--input-border);
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: none;
+    }
+    .leaflet-control-geocoder-form button:hover {
+      background: var(--button-hover-bg);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    #control-buttons {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    #control-buttons button {
+      background: var(--button-bg);
+      border: 1.5px solid var(--input-border);
+      color: var(--text-color);
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: none;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+    #control-buttons button:hover {
+      background: var(--button-hover-bg);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    #marker-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      position: relative;
+    }
+
+    #map {
+      position: absolute;
+      top: 64px;
+      left: 0; right: 0; bottom: 0;
+      border-top: 1px solid #222;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+    }
+    .tile {
+      stroke: var(--tile-stroke);
+      stroke-width: 1;
+      fill: var(--tile-fill);
+      transition: fill 0.3s ease;
+      cursor: pointer;
+    }
+    .tile.selected {
+      fill: var(--tile-fill-selected);
+      filter: drop-shadow(0 0 5px var(--accent-glow));
+    }
+    .leaflet-control-zoom {
+      box-shadow: 0 0 12px var(--accent-glow);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .leaflet-control-zoom a {
+      color: var(--text-color) !important;
+      font-weight: bold;
+      background: var(--button-bg) !important;
+      border: none !important;
+      transition: background-color 0.3s ease;
+    }
+    .leaflet-control-zoom a:hover {
+      background: var(--button-hover-bg) !important;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    #control-buttons {
+      display: none;
+    }
+    body.search-view #control-buttons {
+      display: flex;
+    }
+    #geocoder-container {
+      display: block;
+    }
+    /* Popup container */
+.marker-popup {
+  background-color: #1e1e2f;
+  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 12px;
+  box-shadow:
+    0 0 10px 2px rgba(74, 222, 128, 0.7),
+    inset 0 0 15px 3px rgba(74, 222, 128, 0.3);
+  padding: 16px 20px;
+  width: 280px;
+  user-select: text;
+}
+
+/* Address and date labels */
+.marker-popup > div {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-shadow: 0 0 3px rgba(74, 222, 128, 0.6);
+}
+
+/* Notes label */
+.marker-popup label {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: block;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.8);
+}
+
+/* Textarea for notes */
+.marker-popup textarea {
+  width: 100%;
+  min-height: 80px;
+  background-color: #121212;
+  border: 1.5px solid #4ade80;
+  border-radius: 8px;
+  color: #d4d4d4;
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 10px;
+  box-shadow: inset 0 0 8px rgba(74, 222, 128, 0.4);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  resize: vertical;
+}
+
+/* Focus style for textarea */
+.marker-popup textarea:focus {
+  border-color: #86efac;
+  box-shadow: 0 0 12px #4ade80;
+  outline: none;
+}
+
+/* Remove button */
+.marker-popup button {
+  background-color: #e74c3c;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  margin-top: 12px;
+  float: right;
+}
+
+/* Remove button hover */
+.marker-popup button:hover {
+  background-color: #c0392b;
+  box-shadow: 0 0 14px #e74c3c;
+}
+
+/* Clear float */
+.marker-popup::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+/* Remove white border and default shadow around the popup container */
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Remove the popup tip arrow background (optional, if you want cleaner popup) */
+.leaflet-popup-tip {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Also remove any default leaflet popup padding and background on the content */
+.leaflet-popup-content {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+
+    
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div id="geocoder-container"></div>
+    <div id="control-buttons">
+      <button id="toggle-tiles">Toggle Tiles</button>
+      <button id="confirm">Confirm Selection</button>
+      <button id="back-to-default">Back to Default</button>
+    </div>
+    <div id="marker-buttons">
+      <button id="toggle-marker-mode">Drop Marker</button>
+    <div id="marker-color-menu" style="display:none;gap:8px;">
+      <button onclick="setMarkerColor('red')" style="background:red;color:white;border:none;border-radius:4px;padding:6px 12px;">Red</button>
+      <button onclick="setMarkerColor('orange')" style="background:orange;color:black;border:none;border-radius:4px;padding:6px 12px;">Orange</button>
+      <button onclick="setMarkerColor('green')" style="background:green;color:white;border:none;border-radius:4px;padding:6px 12px;">Green</button>
+    </div>
+    </div>
+    <button id="go-to-search" style="margin-left:auto;background:var(--accent-color);color:#000;font-weight:700;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;box-shadow:0 0 10px var(--accent-glow);transition:background-color 0.3s ease;">Go to Search View</button>
+  </div>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script>
+
+async function loadSavedMarkers() {
+  try {
+    const res = await fetch('/api/markers/');
+    if (!res.ok) throw new Error('Failed to fetch markers');
+    const markers = await res.json();
+
+    markers.forEach(data => {
+      const { id, latitude, longitude, address, last_accessed, color } = data;
+
+      const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
+      const markerColorStr = colorMap[color] || 'red';
+
+      const marker = L.circleMarker([latitude, longitude], {
+        radius: 8,
+        color: markerColorStr,
+        fillColor: markerColorStr,
+        fillOpacity: 0.8,
+      }).addTo(map);
+
+      // Bind a simple placeholder popup initially
+      marker.bindPopup('Loading...');
+
+      // When popup opens, fetch fresh data and build full popup content
+      marker.on('popupopen', async () => {
+        // Fetch fresh marker data on every popup open
+        let freshData = null;
+        try {
+          const freshRes = await fetch(`/api/markers/${data.id}/`);
+          if (!freshRes.ok) throw new Error('Failed to fetch marker details');
+          freshData = await freshRes.json();
+        } catch (err) {
+          console.error('Error fetching fresh marker data:', err);
+          freshData = data; // fallback to initially loaded data if fetch fails
+        }
+
+        const popupContent = document.createElement('div');
+        popupContent.className = 'marker-popup';
+
+        // Address
+        const addressEl = document.createElement('div');
+        addressEl.style.marginBottom = '8px';
+        addressEl.textContent = `Address: ${freshData.address || address}`;
+        popupContent.appendChild(addressEl);
+
+        // Last Accessed
+        const dateEl = document.createElement('div');
+        dateEl.style.marginBottom = '8px';
+        dateEl.textContent = `Last Accessed: ${freshData.last_accessed || last_accessed}`;
+        popupContent.appendChild(dateEl);
+
+        // Notes Label
+        const notesLabel = document.createElement('label');
+        notesLabel.textContent = 'Notes: ';
+        notesLabel.style.display = 'block';
+        notesLabel.style.marginBottom = '4px';
+        popupContent.appendChild(notesLabel);
+
+        // Notes Textarea
+        const notesTextarea = document.createElement('textarea');
+        notesTextarea.style.width = '100%';
+        notesTextarea.style.minHeight = '60px';
+        notesTextarea.style.resize = 'vertical';
+        notesTextarea.value = freshData.notes || '';
+        popupContent.appendChild(notesTextarea);
+
+        // Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.style.marginLeft = '10px';
+        removeBtn.style.padding = '4px 8px';
+        removeBtn.style.border = 'none';
+        removeBtn.style.backgroundColor = '#e74c3c';
+        removeBtn.style.color = 'white';
+        removeBtn.style.borderRadius = '4px';
+        removeBtn.style.cursor = 'pointer';
+        popupContent.appendChild(removeBtn);
+
+        // Save notes on input
+        notesTextarea.addEventListener('input', async () => {
+          const newNotes = notesTextarea.value;
+          try {
+            await fetch(`/api/markers/${data.id}/`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ notes: newNotes }),
+            });
+          } catch (err) {
+            console.error('Failed to update notes:', err);
+          }
+        });
+
+        // Remove Marker Handler
+        removeBtn.onclick = async () => {
+          map.removeLayer(marker);
+          try {
+            await fetch(`/api/markers/${data.id}/`, { method: 'DELETE' });
+          } catch (err) {
+            console.error('Failed to delete marker:', err);
+          }
+        };
+
+        // Update popup content with full UI
+        marker.getPopup().setContent(popupContent);
+      });
+    });
+  } catch (error) {
+    console.error('Error loading markers:', error);
+  }
+}
+
+
+
+
+
+  const map = L.map('map').setView([34.4208, -119.6982], 13);
+  let lastGridSize = getGridSize(map.getZoom());
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  map.zoomControl.setPosition('bottomright');
+
+  const geocoderControl = L.Control.geocoder({
+    defaultMarkGeocode: false,
+    geocoder: L.Control.Geocoder.nominatim()
+  }).on('markgeocode', function(e) {
+    const bbox = e.geocode.bbox;
+    const bounds = [[bbox.getSouth(), bbox.getWest()], [bbox.getNorth(), bbox.getEast()]];
+    map.fitBounds(bounds);
+  });
+  geocoderControl.addTo(map);
+
+  const geocoderElem = document.querySelector('.leaflet-control-geocoder');
+  const geocoderContainer = document.getElementById('geocoder-container');
+  if (geocoderElem && geocoderContainer) {
+    geocoderContainer.appendChild(geocoderElem);
+  }
+
+  const selectedTiles = new Set();
+  const tileLayerGroup = L.layerGroup().addTo(map);
+  let tilesVisible = true;
+
+  function getGridSize(zoom) {
+    if (zoom >= 18) return 0.001;
+    if (zoom >= 16) return 0.002;
+    if (zoom >= 14) return 0.005;
+    if (zoom >= 12) return 0.01;
+    if (zoom >= 10) return 0.02;
+    return 0.05;
+  }
+
+  function drawGrid(bounds) {
+    const currentGridSize = getGridSize(map.getZoom());
+    if (currentGridSize !== lastGridSize) {
+      selectedTiles.clear();
+      lastGridSize = currentGridSize;
+    }
+    tileLayerGroup.clearLayers();
+    if (!tilesVisible) return;
+    const south = bounds.getSouth();
+    const north = bounds.getNorth();
+    const west = bounds.getWest();
+    const east = bounds.getEast();
+    for (let lat = Math.floor(south / currentGridSize) * currentGridSize; lat < north; lat += currentGridSize) {
+      for (let lng = Math.floor(west / currentGridSize) * currentGridSize; lng < east; lng += currentGridSize) {
+        const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+        const isSelected = selectedTiles.has(key);
+        const rect = L.rectangle(
+          [[lat, lng], [lat + currentGridSize, lng + currentGridSize]],
+          { className: isSelected ? 'tile selected' : 'tile' }
+        );
+        rect.on('click', () => {
+          if (selectedTiles.has(key)) {
+            selectedTiles.delete(key);
+            rect.setStyle({ fillOpacity: 0.1 });
+            rect.getElement().classList.remove('selected');
+          } else {
+            selectedTiles.add(key);
+            rect.setStyle({ fillOpacity: 0.5 });
+            rect.getElement().classList.add('selected');
+          }
+        });
+        rect.addTo(tileLayerGroup);
+      }
+    }
+  }
+
+  function showSearchView(show) {
+    if (show) {
+      document.body.classList.add('search-view');
+      tileLayerGroup.addTo(map);
+      drawGrid(map.getBounds());
+      document.getElementById('go-to-search').style.display = 'none';
+    } else {
+      document.body.classList.remove('search-view');
+      tileLayerGroup.clearLayers();
+      map.removeLayer(tileLayerGroup);
+      document.getElementById('go-to-search').style.display = 'inline-block';
+    }
+  }
+
+  showSearchView(false);
+
+  map.on('moveend zoomend', () => {
+    if (document.body.classList.contains('search-view')) {
+      drawGrid(map.getBounds());
+    }
+  });
+
+  document.getElementById('toggle-tiles').onclick = () => {
+    tilesVisible = !tilesVisible;
+    drawGrid(map.getBounds());
+  };
+
+  document.getElementById('confirm').onclick = () => {
+    const gridSize = getGridSize(map.getZoom());
+    if (gridSize > 0.01) {
+      alert("Zoom in further to select tiles at higher resolution.");
+      return;
+    }
+    const selected = Array.from(selectedTiles).map(tile => {
+      const [lat, lng] = tile.split(',').map(Number);
+      return {
+        lat_min: lat,
+        lat_max: lat + gridSize,
+        lon_min: lng,
+        lon_max: lng + gridSize
+      };
+    });
+    console.log('Confirmed tiles:', selected);
+    alert(`Confirmed ${selected.length} tiles (check console for details)`);
+  };
+
+  document.getElementById('go-to-search').onclick = () => {
+    showSearchView(true);
+  };
+
+  document.getElementById('back-to-default').onclick = () => {
+    showSearchView(false);
+  };
+
+  // Marker logic
+  let markerColor = 'red';
+  function setMarkerColor(color) {
+    markerColor = color;
+  }
+
+  let markerMode = false;
+  let markerClickHandler = null;
+
+  const toggleButton = document.getElementById('toggle-marker-mode');
+  const colorMenu = document.getElementById('marker-color-menu');
+
+  toggleButton.onclick = () => {
+    markerMode = !markerMode;
+    toggleButton.textContent = markerMode ? "Cancel Marker" : "Drop Marker";
+    colorMenu.style.display = markerMode ? "flex" : "none";
+
+    if (markerMode) {
+      markerClickHandler = async (e) => {
+  if (!document.body.classList.contains('search-view')) {
+    const { lat, lng } = e.latlng;
+    const address = await getAddressFromCoords(lat, lng);
+
+    const colorMap = { green: 0, orange: 1, red: 2 };
+    const colorValue = colorMap[markerColor] ?? 0;
+
+    // Send new marker data to backend
+    const response = await fetch('/api/markers/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: address || `${lat}, ${lng}`,
+        last_accessed: new Date().toISOString().slice(0, 10),
+        notes: '',
+        latitude: lat,
+        longitude: lng,
+        color: colorValue,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to save marker');
+      const error = await response.text();
+      console.error(error);
+      return;
+    }
+
+    const data = await response.json();
+
+    // Create the Leaflet marker
+    const marker = L.circleMarker([lat, lng], {
+      radius: 8,
+      color: markerColor,
+      fillColor: markerColor,
+      fillOpacity: 0.8,
+    }).addTo(map);
+
+    // Build popup content
+    const popupContent = document.createElement('div');
+    popupContent.className = 'marker-popup';
+
+
+    // Address
+    const addressEl = document.createElement('div');
+    addressEl.style.marginBottom = '8px';
+    addressEl.textContent = `Address: ${address || `${lat.toFixed(5)}, ${lng.toFixed(5)}`}`;
+    popupContent.appendChild(addressEl);
+
+    // Last Accessed
+    const dateEl = document.createElement('div');
+    dateEl.style.marginBottom = '8px';
+    dateEl.textContent = `Last Accessed: ${new Date().toISOString().slice(0, 10)}`;
+    popupContent.appendChild(dateEl);
+
+    // Notes label
+    const notesLabel = document.createElement('label');
+    notesLabel.textContent = 'Notes: ';
+    notesLabel.style.display = 'block';
+    notesLabel.style.marginBottom = '4px';
+    popupContent.appendChild(notesLabel);
+
+    // Notes textarea
+    const notesTextarea = document.createElement('textarea');
+    notesTextarea.style.width = '100%';
+    notesTextarea.style.minHeight = '60px';
+    notesTextarea.style.resize = 'vertical';
+    notesTextarea.value = '';  // Start empty for new marker
+    popupContent.appendChild(notesTextarea);
+
+    // Remove button
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = 'Remove';
+    removeBtn.style.marginLeft = '10px';
+    removeBtn.style.padding = '4px 8px';
+    removeBtn.style.border = 'none';
+    removeBtn.style.backgroundColor = '#e74c3c';
+    removeBtn.style.color = 'white';
+    removeBtn.style.borderRadius = '4px';
+    removeBtn.style.cursor = 'pointer';
+    popupContent.appendChild(removeBtn);
+
+
+ notesTextarea.addEventListener('input', async () => {
+  const newNotes = notesTextarea.value;
+  await fetch(`/api/markers/${data.id}/`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes: newNotes }),
+  });
+  initialNotes = newNotes;  // update the variable so next popupopen uses this updated value
+});
+
+
+
+
+    // Bind popup to marker
+    marker.bindPopup(popupContent);
+
+    // Remove marker handler
+    removeBtn.onclick = async () => {
+      map.removeLayer(marker);
+      await fetch(`/api/markers/${data.id}/`, { method: 'DELETE' });
+    };
+  }
+};
+
+
+
+
+
+async function getAddressFromCoords(lat, lon) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+    const data = await res.json();
+    return data.display_name || `${lat}, ${lon}`;
+  } catch {
+    return `${lat}, ${lon}`;
+  }
+}
+
+
+
+      map.on('click', markerClickHandler);
+    } else {
+      if (markerClickHandler) {
+        map.off('click', markerClickHandler);
+        markerClickHandler = null;
+      }
+    }
+  };
+
+  // Load markers from the backend on page load
+window.addEventListener('load', () => {
+  loadSavedMarkers();
+});
+
+
+</script>
+
+</body>
+</html>
+
