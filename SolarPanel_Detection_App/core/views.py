@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Marker
-from .serializers import MarkerSerializer
+from .models import Client
+from .serializers import ClientSerializer
 from rest_framework import viewsets
 
 # Create your views here.
@@ -8,6 +8,6 @@ def index(request):
     return render(request, "core/index.html")
 
 
-class MarkerViewSets(viewsets.ModelViewSet):
-    queryset = Marker.objects.all()
-    serializer_class = MarkerSerializer
+class ClientViewSets(viewsets.ModelViewSet):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer

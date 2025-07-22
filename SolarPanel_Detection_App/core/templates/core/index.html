@@ -333,14 +333,14 @@
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script>
 
-async function loadSavedMarkers() {
+async function loadSavedClients() {
   try {
-    const res = await fetch('/api/markers/');
+    const res = await fetch('/api/clients/');
     if (!res.ok) throw new Error('Failed to fetch markers');
     const markers = await res.json();
 
     markers.forEach(data => {
-      const { id, latitude, longitude, address, last_accessed, color } = data;
+      const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
 
       const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
       const markerColorStr = colorMap[color] || 'red';
@@ -360,11 +360,11 @@ async function loadSavedMarkers() {
         // Fetch fresh marker data on every popup open
         let freshData = null;
         try {
-          const freshRes = await fetch(`/api/markers/${data.id}/`);
-          if (!freshRes.ok) throw new Error('Failed to fetch marker details');
+          const freshRes = await fetch(`/api/clients/${data.id}/`);
+          if (!freshRes.ok) throw new Error('Failed to fetch client details');
           freshData = await freshRes.json();
         } catch (err) {
-          console.error('Error fetching fresh marker data:', err);
+          console.error('Error fetching fresh client data:', err);
           freshData = data; // fallback to initially loaded data if fetch fails
         }
 
@@ -414,7 +414,7 @@ async function loadSavedMarkers() {
         notesTextarea.addEventListener('input', async () => {
           const newNotes = notesTextarea.value;
           try {
-            await fetch(`/api/markers/${data.id}/`, {
+            await fetch(`/api/clients/${data.id}/`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ notes: newNotes }),
@@ -428,7 +428,7 @@ async function loadSavedMarkers() {
         removeBtn.onclick = async () => {
           map.removeLayer(marker);
           try {
-            await fetch(`/api/markers/${data.id}/`, { method: 'DELETE' });
+            await fetch(`/api/clients/${data.id}/`, { method: 'DELETE' });
           } catch (err) {
             console.error('Failed to delete marker:', err);
           }
@@ -638,7 +638,7 @@ async function loadSavedMarkers() {
     const colorValue = colorMap[markerColor] ?? 0;
 
     // Send new marker data to backend
-    const response = await fetch('/api/markers/', {
+    const response = await fetch('/api/clients/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -715,7 +715,7 @@ async function loadSavedMarkers() {
 
  notesTextarea.addEventListener('input', async () => {
   const newNotes = notesTextarea.value;
-  await fetch(`/api/markers/${data.id}/`, {
+  await fetch(`/api/clients/${data.id}/`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ notes: newNotes }),
@@ -732,7 +732,7 @@ async function loadSavedMarkers() {
     // Remove marker handler
     removeBtn.onclick = async () => {
       map.removeLayer(marker);
-      await fetch(`/api/markers/${data.id}/`, { method: 'DELETE' });
+      await fetch(`/api/clients/${data.id}/`, { method: 'DELETE' });
     };
   }
 };
@@ -764,7 +764,7 @@ async function getAddressFromCoords(lat, lon) {
 
   // Load markers from the backend on page load
 window.addEventListener('load', () => {
-  loadSavedMarkers();
+  loadSavedClients();
 });
 
 

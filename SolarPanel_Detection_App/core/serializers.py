@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Marker
+from .models import Client
 
-class MarkerSerializer(serializers.ModelSerializer):
+class ClientSerializer(serializers.ModelSerializer):
     notes = serializers.CharField(allow_blank=True)
 
 
     class Meta:
-        model = Marker
+        model = Client
         fields = "__all__"
