@@ -329,6 +329,20 @@
     <button id="go-to-search" style="margin-left:auto;background:var(--accent-color);color:#000;font-weight:700;border:none;border-radius:8px;padding:10px 22px;cursor:pointer;box-shadow:0 0 10px var(--accent-glow);transition:background-color 0.3s ease;">Go to Search View</button>
   </div>
   <div id="map"></div>
+
+  <div id="client-sidebar">
+  <h2>Clients</h2>
+  <ul id="client-list">
+    {% for client in clients %}
+    <li class="client-entry">
+      <strong>{{ client.name }}</strong><br>
+      {{ client.address|default:"No address" }}<br>
+      <button onclick="openClientModal({{ client.id }})">View More</button>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script>
@@ -767,8 +781,32 @@ window.addEventListener('load', () => {
   loadSavedClients();
 });
 
+function openClientModal(clientId) {
+  fetch(`/clients/${clientId}/detail/`)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('client-details-content').innerHTML = html;
+      document.getElementById('client-modal').style.display = 'block';
+    });
+}
+
+function closeClientModal() {
+  document.getElementById('client-modal').style.display = 'none';
+}
+
+
 
 </script>
+
+<div class="modal" id="client-modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeClientModal()">×</span>
+    <div id="client-details-content">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>

@@ -1,0 +1,19 @@
+<h3>{{ client.name }}</h3>
+<p><strong>Address:</strong> {{ client.address }}</p>
+<p><strong>Notes:</strong> {{ client.notes }}</p>
+
+<h4>Jobs</h4>
+<ul>
+  {% for job in client.jobs.all %}
+    <li>({{ job.date }})</li>
+  {% empty %}
+    <li>No jobs yet.</li>
+  {% endfor %}
+</ul>
+
+<form method="post" action="{% url 'add_job' client.id %}">
+  {% csrf_token %}
+  <input type="number" name="payment" required>
+  <input type="date" name="date" required>
+  <button type="submit">Add Job</button>
+</form>
