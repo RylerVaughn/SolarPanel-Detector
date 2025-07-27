@@ -1,7 +1,9 @@
-from django.shortcuts import render, get_object_or_404, redirect   
+from django.shortcuts import render, get_object_or_404  
 from .models import Client, Job
 from .serializers import ClientSerializer
 from rest_framework import viewsets
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Create your views here.
@@ -17,12 +19,12 @@ def client_detail_modal(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     return render(request, "core/partials/client_detail_modal.html", {"client": client})
 
-
+@csrf_exempt
 def add_job(request, client_id):
     client = get_object_or_404(Client, id=client_id)
     payment = request.POST.get("payment")
     date = request.POST.get("date")
 
     Job.objects.create(client=client, payment=payment, date=date)
-
-    return redirect("client_detail_modal", client_id=client.id)
+ 
+    return JsonResponse({"status": 200})

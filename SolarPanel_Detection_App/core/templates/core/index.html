@@ -980,19 +980,14 @@ function openClientModal(clientId) {
       const submitButton = document.getElementById("modal-submit-button");
 
       submitButton.addEventListener("click", async () => {
-        postData = {
-          "payment": paymentInput.value,
-          "date": dateInput.value
-        };
-        const csrfToken = querySelector.getElementById("[name=csrfmiddlewaretoken]").value;
-      })
+        formData = new FormData();
 
-      const response = await fetch(`clients/${clientId}/addjob/`, {
+        formData.append("payment", paymentInput.value);
+        formData.append("date", dateInput.value);
+
+        const response = await fetch(`clients/${clientId}/addjob/`, {
         method: "POST",
-        headers: {
-          "X-CSRFToken": csrfToken
-        },
-        body: postData
+        body: formData
       });
 
       const data = await response.json();
@@ -1002,6 +997,7 @@ function openClientModal(clientId) {
       } else {
         console.log("Cooked")
       }
+    })
 
 
 
