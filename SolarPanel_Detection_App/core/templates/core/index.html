@@ -407,6 +407,85 @@
   transform: translateX(100%);
 }
 
+/* Modal overlay and animation */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.modal-content {
+  background: linear-gradient(145deg, #1c1c1c, #111);
+  border: 1px solid #333;
+  border-radius: 14px;
+  box-shadow:
+    0 0 14px rgba(74, 222, 128, 0.5),
+    inset 0 0 10px rgba(74, 222, 128, 0.1);
+  color: var(--text-color);
+  max-width: 600px;
+  width: 90%;
+  padding: 24px 28px;
+  position: relative;
+  animation: fadeInModal 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Close button */
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #e74c3c;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+  transition: background 0.3s ease;
+}
+.modal-close:hover {
+  background: #c0392b;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Optional: style dynamic content inside modal */
+.modal-content h3,
+.modal-content h4 {
+  color: var(--accent-color);
+  text-shadow: 0 0 6px var(--accent-glow);
+  margin-top: 0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+}
+
+.modal-content p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #ccc;
+}
 
 
     
@@ -449,6 +528,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script>
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('client-sidebar').classList.add('hidden');
+    document.getElementById("client-sidebar").classList.toggle("closed");
+  });
 
 async function loadSavedClients() {
   try {
@@ -888,18 +972,55 @@ function openClientModal(clientId) {
   fetch(`/clients/${clientId}/detail/`)
     .then(response => response.text())
     .then(html => {
-      document.getElementById('client-details-content').innerHTML = html;
-      document.getElementById('client-modal').style.display = 'block';
+      const modal = document.getElementById('client-modal');
+      document.getElementById('modal-body').innerHTML = html;
+
+      const paymentInput = document.getElementById("modal-payment-input");
+      const dateInput = document.getElementById("modal-date-input");
+      const submitButton = document.getElementById("modal-submit-button");
+
+      submitButton.addEventListener("click", async () => {
+        postData = {
+          "payment": paymentInput.value,
+          "date": dateInput.value
+        };
+        const csrfToken = querySelector.getElementById("[name=csrfmiddlewaretoken]").value;
+      })
+
+      const response = await fetch(`clients/${clientId}/addjob/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken
+        },
+        body: postData
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log(data)
+      } else {
+        console.log("Cooked")
+      }
+
+
+
+      modal.classList.remove('hidden');
+    })
+    .catch(err => {
+      console.error('Error loading modal content:', err);
     });
 }
 
 function closeClientModal() {
-  document.getElementById('client-modal').style.display = 'none';
+  const modal = document.getElementById('client-modal');
+  modal.classList.add('hidden');
+  document.getElementById('modal-body').innerHTML = '';
 }
-
 
 document.getElementById('toggle-client-sidebar').addEventListener('click', () => {
   const sidebar = document.getElementById('client-sidebar');
+  sidebar.classList.remove("hidden");
   sidebar.classList.toggle('closed');
 });
 
@@ -907,11 +1028,11 @@ document.getElementById('toggle-client-sidebar').addEventListener('click', () =>
 
 </script>
 
-<div class="modal" id="client-modal" style="display:none;">
+<div id="client-modal" class="modal-overlay hidden">
   <div class="modal-content">
-    <span class="close-button" onclick="closeClientModal()">×</span>
-    <div id="client-details-content">
-      <!-- Loaded dynamically -->
+    <button class="modal-close" onclick="closeClientModal()">×</button>
+    <div id="modal-body">
+      <!-- Dynamic client detail HTML goes here -->
     </div>
   </div>
 </div>
