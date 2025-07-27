@@ -17,6 +17,7 @@ class ClientViewSets(viewsets.ModelViewSet):
 
 def client_detail_modal(request, client_id):
     client = get_object_or_404(Client, id=client_id)
+    print("\n", client.jobs, "\n")
     return render(request, "core/partials/client_detail_modal.html", {"client": client})
 
 @csrf_exempt
