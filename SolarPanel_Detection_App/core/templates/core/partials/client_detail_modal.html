@@ -19,7 +19,7 @@
               <th class="px-4 py-2 border-b border-gray-700">Date</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="client-jobs-container">
             {% for job in client.jobs.all %}
               <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors">
                 <td class="px-4 py-2 border-b border-gray-800 text-green-300">${{ job.payment }}</td>

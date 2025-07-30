@@ -1040,6 +1040,8 @@ function openClientModal(clientId) {
       const submitButton = document.getElementById("modal-submit-button");
 
       submitButton.addEventListener("click", async () => {
+
+        const jobContainer = document.getElementById("client-jobs-container");
         formData = new FormData();
 
         formData.append("payment", paymentInput.value);
@@ -1053,8 +1055,30 @@ function openClientModal(clientId) {
       const data = await response.json();
 
       if (response.ok) {
+        const row = document.createElement("tr");
+        row.classList.add("bg-[#1c1c1c]", "hover:bg-[#222]",  "transition-colors");
+
+        const paymentInfo = document.createElement("td");
+        paymentInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800", "text-green-300");
+        paymentInfo.append(paymentInput.value);
+        
+        const rawDate = new Date(dateInput.value);
+        const formatted = rawDate.toLocaleDateString("en-US", {
+          month: "short", 
+          day: "2-digit", 
+          year: "numeric" 
+        });
+        const dateInfo = document.createElement("td");
+        dateInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800");
+        dateInfo.append(formatted);
+
+        row.append(paymentInfo);
+        row.append(dateInfo);
+        jobContainer.append(row);
+
         dateInput.value = null;
         paymentInput.value = null;
+
       } else {
         console.log("Cooked")
       }
