@@ -1038,53 +1038,80 @@ function openClientModal(clientId) {
       const paymentInput = document.getElementById("modal-payment-input");
       const dateInput = document.getElementById("modal-date-input");
       const submitButton = document.getElementById("modal-submit-button");
+      const paymentErrorMsg = document.getElementById("payment-input-error");
+      const dateErrorMsg = document.getElementById("date-input-error");
 
       submitButton.addEventListener("click", async () => {
 
+        if (!paymentInput.value.trim() || isNaN(paymentInput.value)) {
+          paymentErrorMsg.classList.remove("hidden");
+          paymentInput.classList.add("border-red-500");
+          return;
+        } else {
+          paymentErrorMsg.classList.add("hidden");
+          paymentInput.classList.remove("border-red-500");
+        }
+
+        if (!dateInput.value.trim()) {
+          dateErrorMsg.classList.remove("hidden");
+          dateInput.classList.add("border-red-500");
+          return;
+        } else {
+          dateErrorMsg.classList.add("hidden");
+          dateInput.classList.remove("border-red-500");
+        }
+
         const jobContainer = document.getElementById("client-jobs-container");
-        formData = new FormData();
+        const formData = new FormData();
 
         formData.append("payment", paymentInput.value);
         formData.append("date", dateInput.value);
 
         const response = await fetch(`clients/${clientId}/addjob/`, {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const row = document.createElement("tr");
-        row.classList.add("bg-[#1c1c1c]", "hover:bg-[#222]",  "transition-colors");
-
-        const paymentInfo = document.createElement("td");
-        paymentInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800", "text-green-300");
-        paymentInfo.append(paymentInput.value);
-        
-        const rawDate = new Date(dateInput.value);
-        const formatted = rawDate.toLocaleDateString("en-US", {
-          month: "short", 
-          day: "2-digit", 
-          year: "numeric" 
+          method: "POST",
+          body: formData
         });
-        const dateInfo = document.createElement("td");
-        dateInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800");
-        dateInfo.append(formatted);
+      
+        try {
 
-        row.append(paymentInfo);
-        row.append(dateInfo);
-        jobContainer.append(row);
+          const data = await response.json();
 
-        dateInput.value = null;
-        paymentInput.value = null;
+          if (response.ok) {
+            const row = document.createElement("tr");
+            row.classList.add("bg-[#1c1c1c]", "hover:bg-[#222]",  "transition-colors");
 
-      } else {
-        console.log("Cooked")
-      }
-    })
+            const paymentInfo = document.createElement("td");
+            paymentInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800", "text-green-300");
+            paymentInfo.textContent = `$${paymentInput.value}.00`;
+            
+            const rawDate = new Date(dateInput.value);
+            const formatted = rawDate.toLocaleDateString("en-US", {
+              month: "short", 
+              day: "2-digit", 
+              year: "numeric" 
+            });
+            const dateInfo = document.createElement("td");
+            dateInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800");
+            dateInfo.textContent = formatted;
 
+            row.append(paymentInfo);
+            row.append(dateInfo);
+            jobContainer.append(row);
 
+            dateInput.value = null;
+            paymentInput.value = null;
+
+          } else {
+            console.log("Error: request to add a job to a client failed:", data)
+            alert("Error occured, see console for more details.")
+          }
+
+        } catch (error) {
+          console.log("Error: error occured while constructing table row:", error);
+          alert("Error occured, see console for more details.");
+        } 
+
+      })
 
       modal.classList.remove('hidden');
     })
