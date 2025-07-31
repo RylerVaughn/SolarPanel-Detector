@@ -606,10 +606,28 @@
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
       user-select: none;
     }
-    #marker-color-menu button:hover {
+
+   
+  #marker-color-menu button:active {
+    transform: scale(0.95);
+    background-color: #555; /* darken temporarily */
+    box-shadow: 0 0 15px white;
+  }
+  
+    #red-toggle:hover {
       background: var(--button-hover-bg);
-      box-shadow: 0 0 10px var(--accent-glow);
+      box-shadow: 0 0 10px red;
     }
+    
+    #green-toggle:hover {
+      background: var(--button-hover-bg);
+      box-shadow: 0 0 10px green;
+    }
+    #orange-toggle:hover {
+      background: var(--button-hover-bg);
+      box-shadow: 0 0 10px orange;
+    }
+
   
 
 
@@ -791,7 +809,7 @@ async function loadSavedClients() {
   const map = L.map('map', {
     center: [34.0522, -118.2437], // replace with your default coordinates
     zoom: 13,
-    layers: [osmLayer] // default layer
+    layers: [satelliteLayer] // default layer
   }).setView([34.4208, -119.6982], 13);
   let lastGridSize = getGridSize(map.getZoom());
  
