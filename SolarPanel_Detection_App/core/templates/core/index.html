@@ -726,9 +726,7 @@ async function renderClientInSidebar(data) {
 
 async function removeClientFromSidebar(clientId) {
   const clientEntryList = document.getElementById("client-list");
-  console.log("Made it");
   for (let child of clientEntryList.children) {
-    console.log(child);
     if (child.getAttribute("id") == clientId) {
       child.remove(child);
       return;
@@ -828,7 +826,6 @@ function createMarker(jsonData) {
           map.removeLayer(marker);
           try {
             await fetch(`/api/clients/${jsonData.id}/`, { method: 'DELETE' });
-            console.log("Made it here.")
             removeClientFromSidebar(jsonData.id);
           } catch (error) {
             alert("Something went wrong when trying to remove client, see console for more details.");
