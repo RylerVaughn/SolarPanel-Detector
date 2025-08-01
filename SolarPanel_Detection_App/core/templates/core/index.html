@@ -660,13 +660,13 @@
 <div id="client-sidebar">
   <h2>Clients</h2>
   <ul id="client-list">
-    {% for client in clients %}
+    <!-- {% for client in clients %}
     <li class="client-entry">
       <strong>{{ client.name }}</strong><br>
       {{ client.address|default:"No address" }}<br>
       <button onclick="openClientModal({{ client.id }})">View More</button>
     </li>
-    {% endfor %}
+    {% endfor %} -->
   </ul>
 </div>
 
@@ -676,17 +676,20 @@
   <script>
 
   window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('client-sidebar').classList.add('hidden');
-    document.getElementById("client-sidebar").classList.toggle("closed");
+    const clientSidebar = document.getElementById('client-sidebar');
+    clientSidebar.classList.add("hidden");
+    clientSidebar.classList.toggle("closed");
+    loadSavedClients();
   });
+
 
 async function loadSavedClients() {
   try {
     const res = await fetch('/api/clients/');
     if (!res.ok) throw new Error('Failed to fetch markers');
-    const markers = await res.json();
+    const clients = await res.json();
 
-    markers.forEach(data => {
+    clients.forEach(data => {
       const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
 
       const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
@@ -785,8 +788,37 @@ async function loadSavedClients() {
         marker.getPopup().setContent(popupContent);
       });
     });
+
+    const clientSidebarList = document.getElementById("client-list");
+
+    clients.forEach(data => {
+      const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
+
+      const clientEntry = document.createElement("li");
+      clientEntry.classList.add("client-entry");
+
+      const clientName = document.createElement("strong");
+      clientName.textContent = name;
+
+      const lineBreak = document.createElement("br");
+
+      const clientAddress = document.createElement("p");
+      clientAddress.textContent = address;
+
+      const lineBreak2 = document.createElement("br");
+
+      const viewMoreDetails = document.createElement("button");
+      viewMoreDetails.textContent = "View More";
+      viewMoreDetails.addEventListener("click", () => {
+        openClientModal(id)
+      })
+
+      clientEntry.append(clientName, lineBreak, clientAddress, lineBreak2, viewMoreDetails);
+      clientSidebarList.append(clientEntry);
+    })
+
   } catch (error) {
-    console.error('Error loading markers:', error);
+    console.error('Error loading clients:', error);
   }
 }
 
@@ -990,12 +1022,12 @@ async function loadSavedClients() {
 
     if (markerMode) {
       markerClickHandler = async (e) => {
-  if (!document.body.classList.contains('search-view')) {
-    const { lat, lng } = e.latlng;
-    const address = await getAddressFromCoords(lat, lng);
+      if (!document.body.classList.contains('search-view')) {
+        const { lat, lng } = e.latlng;
+        const address = await getAddressFromCoords(lat, lng);
 
-    const colorMap = { green: 0, orange: 1, red: 2 };
-    const colorValue = colorMap[markerColor] ?? 0;
+        const colorMap = { green: 0, orange: 1, red: 2 };
+        const colorValue = colorMap[markerColor] ?? 0;
 
     // Send new marker data to backend
     const response = await fetch('/api/clients/', {
@@ -1073,15 +1105,15 @@ async function loadSavedClients() {
     popupContent.appendChild(removeBtn);
 
 
- notesTextarea.addEventListener('input', async () => {
-  const newNotes = notesTextarea.value;
-  await fetch(`/api/clients/${data.id}/`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ notes: newNotes }),
-  });
-  initialNotes = newNotes;  // update the variable so next popupopen uses this updated value
-});
+    notesTextarea.addEventListener('input', async () => {
+      const newNotes = notesTextarea.value;
+      await fetch(`/api/clients/${data.id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: newNotes }),
+      });
+      initialNotes = newNotes;  // update the variable so next popupopen uses this updated value
+    });
 
 
 
@@ -1092,10 +1124,16 @@ async function loadSavedClients() {
     // Remove marker handler
     removeBtn.onclick = async () => {
       map.removeLayer(marker);
+      removeClientFromSidebar(data.id);
       await fetch(`/api/clients/${data.id}/`, { method: 'DELETE' });
     };
   }
 };
+
+// FINISH AFTER YOU CHANGE THE CLIENT SIDEBAR LOADING METHOD TO JAVASCRIPT
+async function removeClientFromSidebar(clientId) {
+
+}
 
 
 
@@ -1122,10 +1160,6 @@ async function getAddressFromCoords(lat, lon) {
     }
   };
 
-  // Load markers from the backend on page load
-window.addEventListener('load', () => {
-  loadSavedClients();
-});
 
 function openClientModal(clientId) {
   fetch(`/clients/${clientId}/detail/`)
@@ -1199,6 +1233,14 @@ function openClientModal(clientId) {
 
             dateInput.value = null;
             paymentInput.value = null;
+
+            const jobsTable = document.getElementById("jobs-modal-table");
+
+            if (jobsTable.classList.contains("hidden")) {
+              jobsTable.classList.remove("hidden");
+              const noJobsIndicator = document.getElementById("no-jobs-modal-indicator");
+              noJobsIndicator.classList.add("hidden");
+            }
 
           } else {
             console.log("Error: request to add a job to a client failed:", data)

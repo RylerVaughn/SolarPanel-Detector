@@ -11,7 +11,7 @@
     <h3 class="text-lg font-semibold text-green-300 mb-3">Jobs</h3>
 
     {% if client.jobs.all %}
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto" id="jobs-modal-table">
         <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
           <thead class="bg-[#202020] text-gray-300">
             <tr>
@@ -30,7 +30,19 @@
         </table>
       </div>
     {% else %}
-      <p class="text-sm text-gray-400">No jobs yet.</p>
+      <div class="overflow-x-auto hidden" id="jobs-modal-table">
+        <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
+          <thead class="bg-[#202020] text-gray-300">
+            <tr>
+              <th class="px-4 py-2 border-b border-gray-700">Price</th>
+              <th class="px-4 py-2 border-b border-gray-700">Date</th>
+            </tr>
+          </thead>
+          <tbody id="client-jobs-container">
+          </tbody>
+        </table>
+      </div>
+      <p id="no-jobs-modal-indicator" class="text-sm text-gray-400">No jobs yet.</p>
     {% endif %}
   </div>
 
