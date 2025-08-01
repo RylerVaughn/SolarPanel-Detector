@@ -660,13 +660,6 @@
 <div id="client-sidebar">
   <h2>Clients</h2>
   <ul id="client-list">
-    <!-- {% for client in clients %}
-    <li class="client-entry">
-      <strong>{{ client.name }}</strong><br>
-      {{ client.address|default:"No address" }}<br>
-      <button onclick="openClientModal({{ client.id }})">View More</button>
-    </li>
-    {% endfor %} -->
   </ul>
 </div>
 
@@ -690,7 +683,61 @@ async function loadSavedClients() {
     const clients = await res.json();
 
     clients.forEach(data => {
-      const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
+      createMarker(data);
+    });
+
+    clients.forEach(data => {
+      renderClientInSidebar(data);
+    })
+
+  } catch (error) {
+    console.error('Error loading clients:', error);
+  }
+}
+
+async function renderClientInSidebar(data) {
+  const clientSidebarList = document.getElementById("client-list");
+
+  const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
+
+      const clientEntry = document.createElement("li");
+      clientEntry.classList.add("client-entry");
+      clientEntry.setAttribute("id", id);
+
+      const clientName = document.createElement("strong");
+      clientName.textContent = name;
+
+      const lineBreak = document.createElement("br");
+
+      const clientAddress = document.createElement("p");
+      clientAddress.textContent = address;
+
+      const lineBreak2 = document.createElement("br");
+
+      const viewMoreDetails = document.createElement("button");
+      viewMoreDetails.textContent = "View More";
+      viewMoreDetails.addEventListener("click", () => {
+        openClientModal(id)
+      })
+
+      clientEntry.append(clientName, lineBreak, clientAddress, lineBreak2, viewMoreDetails);
+      clientSidebarList.append(clientEntry);
+}
+
+async function removeClientFromSidebar(clientId) {
+  const clientEntryList = document.getElementById("client-list");
+  console.log("Made it");
+  for (let child of clientEntryList.children) {
+    console.log(child);
+    if (child.getAttribute("id") == clientId) {
+      child.remove(child);
+      return;
+    }
+  }
+}
+
+function createMarker(jsonData) {
+  const { id, latitude, longitude, address, last_accessed, color, name, jobs } = jsonData;
 
       const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
       const markerColorStr = colorMap[color] || 'red';
@@ -705,17 +752,19 @@ async function loadSavedClients() {
       // Bind a simple placeholder popup initially
       marker.bindPopup('Loading...');
 
+      renderClientInSidebar(jsonData);
+
       // When popup opens, fetch fresh data and build full popup content
       marker.on('popupopen', async () => {
         // Fetch fresh marker data on every popup open
         let freshData = null;
         try {
-          const freshRes = await fetch(`/api/clients/${data.id}/`);
+          const freshRes = await fetch(`/api/clients/${jsonData.id}/`);
           if (!freshRes.ok) throw new Error('Failed to fetch client details');
           freshData = await freshRes.json();
         } catch (err) {
           console.error('Error fetching fresh client data:', err);
-          freshData = data; // fallback to initially loaded data if fetch fails
+          freshData = jsonData; // fallback to initially loaded data if fetch fails
         }
 
         const popupContent = document.createElement('div');
@@ -764,7 +813,7 @@ async function loadSavedClients() {
         notesTextarea.addEventListener('input', async () => {
           const newNotes = notesTextarea.value;
           try {
-            await fetch(`/api/clients/${data.id}/`, {
+            await fetch(`/api/clients/${jsonData.id}/`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ notes: newNotes }),
@@ -778,50 +827,19 @@ async function loadSavedClients() {
         removeBtn.onclick = async () => {
           map.removeLayer(marker);
           try {
-            await fetch(`/api/clients/${data.id}/`, { method: 'DELETE' });
-          } catch (err) {
-            console.error('Failed to delete marker:', err);
+            await fetch(`/api/clients/${jsonData.id}/`, { method: 'DELETE' });
+            console.log("Made it here.")
+            removeClientFromSidebar(jsonData.id);
+          } catch (error) {
+            alert("Something went wrong when trying to remove client, see console for more details.");
+            console.log("Problem with removing client:", error);
           }
         };
 
         // Update popup content with full UI
-        marker.getPopup().setContent(popupContent);
-      });
-    });
-
-    const clientSidebarList = document.getElementById("client-list");
-
-    clients.forEach(data => {
-      const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
-
-      const clientEntry = document.createElement("li");
-      clientEntry.classList.add("client-entry");
-
-      const clientName = document.createElement("strong");
-      clientName.textContent = name;
-
-      const lineBreak = document.createElement("br");
-
-      const clientAddress = document.createElement("p");
-      clientAddress.textContent = address;
-
-      const lineBreak2 = document.createElement("br");
-
-      const viewMoreDetails = document.createElement("button");
-      viewMoreDetails.textContent = "View More";
-      viewMoreDetails.addEventListener("click", () => {
-        openClientModal(id)
-      })
-
-      clientEntry.append(clientName, lineBreak, clientAddress, lineBreak2, viewMoreDetails);
-      clientSidebarList.append(clientEntry);
-    })
-
-  } catch (error) {
-    console.error('Error loading clients:', error);
-  }
+    marker.getPopup().setContent(popupContent);
+  });
 }
-
 
 
 
@@ -1051,91 +1069,9 @@ async function loadSavedClients() {
     }
 
     const data = await response.json();
-
-    // Create the Leaflet marker
-    const marker = L.circleMarker([lat, lng], {
-      radius: 8,
-      color: markerColor,
-      fillColor: markerColor,
-      fillOpacity: 0.8,
-    }).addTo(map);
-
-    // Build popup content
-    const popupContent = document.createElement('div');
-    popupContent.className = 'marker-popup';
-
-
-    // Address
-    const addressEl = document.createElement('div');
-    addressEl.style.marginBottom = '8px';
-    addressEl.textContent = `Address: ${address || `${lat.toFixed(5)}, ${lng.toFixed(5)}`}`;
-    popupContent.appendChild(addressEl);
-
-    // Last Accessed
-    const dateEl = document.createElement('div');
-    dateEl.style.marginBottom = '8px';
-    dateEl.textContent = `Last Accessed: ${new Date().toISOString().slice(0, 10)}`;
-    popupContent.appendChild(dateEl);
-
-    // Notes label
-    const notesLabel = document.createElement('label');
-    notesLabel.textContent = 'Notes: ';
-    notesLabel.style.display = 'block';
-    notesLabel.style.marginBottom = '4px';
-    popupContent.appendChild(notesLabel);
-
-    // Notes textarea
-    const notesTextarea = document.createElement('textarea');
-    notesTextarea.style.width = '100%';
-    notesTextarea.style.minHeight = '60px';
-    notesTextarea.style.resize = 'vertical';
-    notesTextarea.value = '';  // Start empty for new marker
-    popupContent.appendChild(notesTextarea);
-
-    // Remove button
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent = 'Remove';
-    removeBtn.style.marginLeft = '10px';
-    removeBtn.style.padding = '4px 8px';
-    removeBtn.style.border = 'none';
-    removeBtn.style.backgroundColor = '#e74c3c';
-    removeBtn.style.color = 'white';
-    removeBtn.style.borderRadius = '4px';
-    removeBtn.style.cursor = 'pointer';
-    popupContent.appendChild(removeBtn);
-
-
-    notesTextarea.addEventListener('input', async () => {
-      const newNotes = notesTextarea.value;
-      await fetch(`/api/clients/${data.id}/`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: newNotes }),
-      });
-      initialNotes = newNotes;  // update the variable so next popupopen uses this updated value
-    });
-
-
-
-
-    // Bind popup to marker
-    marker.bindPopup(popupContent);
-
-    // Remove marker handler
-    removeBtn.onclick = async () => {
-      map.removeLayer(marker);
-      removeClientFromSidebar(data.id);
-      await fetch(`/api/clients/${data.id}/`, { method: 'DELETE' });
-    };
+    createMarker(data)
   }
 };
-
-// FINISH AFTER YOU CHANGE THE CLIENT SIDEBAR LOADING METHOD TO JAVASCRIPT
-async function removeClientFromSidebar(clientId) {
-
-}
-
-
 
 
 
