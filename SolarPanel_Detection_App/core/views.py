@@ -29,3 +29,7 @@ def add_job(request, client_id):
     Job.objects.create(client=client, payment=payment, date=date)
  
     return JsonResponse({"status": 200})
+
+
+def add_client(request):
+    return render("core/partials/client_request.html")
