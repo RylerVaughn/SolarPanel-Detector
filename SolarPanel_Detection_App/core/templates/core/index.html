@@ -683,12 +683,8 @@ async function loadSavedClients() {
     const clients = await res.json();
 
     clients.forEach(data => {
-      createMarker(data);
+      RenderClients(data);
     });
-
-    clients.forEach(data => {
-      renderClientInSidebar(data);
-    })
 
   } catch (error) {
     console.error('Error loading clients:', error);
@@ -734,7 +730,7 @@ async function removeClientFromSidebar(clientId) {
   }
 }
 
-function createMarker(jsonData) {
+function RenderClients(jsonData) {
   const { id, latitude, longitude, address, last_accessed, color, name, jobs } = jsonData;
 
       const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
@@ -1066,7 +1062,7 @@ function createMarker(jsonData) {
     }
 
     const data = await response.json();
-    createMarker(data)
+    RenderClients(data)
   }
 };
 
