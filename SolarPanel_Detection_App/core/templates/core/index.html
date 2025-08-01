@@ -683,7 +683,7 @@ async function loadSavedClients() {
     const clients = await res.json();
 
     clients.forEach(data => {
-      RenderClients(data);
+      RenderClient(data);
     });
 
   } catch (error) {
@@ -730,7 +730,7 @@ async function removeClientFromSidebar(clientId) {
   }
 }
 
-function RenderClients(jsonData) {
+function RenderClient(jsonData) {
   const { id, latitude, longitude, address, last_accessed, color, name, jobs } = jsonData;
 
       const colorMap = { 0: 'green', 1: 'orange', 2: 'red' };
@@ -953,6 +953,9 @@ function RenderClients(jsonData) {
     const dropMarkerToggle = document.getElementById("marker-buttons");
 
     if (show) {
+    const colorMenu = document.getElementById("marker-color-menu");
+    colorMenu.classList.add("hidden");
+
       document.body.classList.add('search-view');
       tileLayerGroup.addTo(map);
       drawGrid(map.getBounds());
@@ -1034,37 +1037,48 @@ function RenderClients(jsonData) {
     if (markerMode) {
       markerClickHandler = async (e) => {
       if (!document.body.classList.contains('search-view')) {
+
+        await fetch("clients/addclient/")
+        .then(response => response.text())
+        .then(html => {
+          const modal = document.getElementById("client-modal");
+
+          document.getElementById("modal-body").innerHTML = html;
+
+          modal.classList.remove("hidden");
+        })
+
         const { lat, lng } = e.latlng;
         const address = await getAddressFromCoords(lat, lng);
 
         const colorMap = { green: 0, orange: 1, red: 2 };
         const colorValue = colorMap[markerColor] ?? 0;
 
-    // Send new marker data to backend
-    const response = await fetch('/api/clients/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        address: address || `${lat}, ${lng}`,
-        last_accessed: new Date().toISOString().slice(0, 10),
-        notes: '',
-        latitude: lat,
-        longitude: lng,
-        color: colorValue,
-      }),
-    });
+        // Send new marker data to backend
+        const response = await fetch('/api/clients/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: address || `${lat}, ${lng}`,
+            last_accessed: new Date().toISOString().slice(0, 10),
+            notes: '',
+            latitude: lat,
+            longitude: lng,
+            color: colorValue,
+          }),
+        });
 
-    if (!response.ok) {
-      console.error('Failed to save marker');
-      const error = await response.text();
-      console.error(error);
-      return;
-    }
+        if (!response.ok) {
+          console.error('Failed to save marker');
+          const error = await response.text();
+          console.error(error);
+          return;
+        }
 
-    const data = await response.json();
-    RenderClients(data)
-  }
-};
+        const data = await response.json();
+        RenderClient(data)
+      }
+    };
 
 
 

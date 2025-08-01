@@ -32,4 +32,4 @@ def add_job(request, client_id):
 
 
 def add_client(request):
-    return render("core/partials/client_request.html")
+    return render(request, "core/partials/client_request.html")
