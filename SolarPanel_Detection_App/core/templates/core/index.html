@@ -713,7 +713,7 @@ async function renderClientInSidebar(data) {
       const viewMoreDetails = document.createElement("button");
       viewMoreDetails.textContent = "View More";
       viewMoreDetails.addEventListener("click", () => {
-        openClientModal(id)
+        openDetailModal(id)
       })
 
       clientEntry.append(clientName, lineBreak, clientAddress, lineBreak2, viewMoreDetails);
@@ -1042,13 +1042,44 @@ function RenderClient(jsonData) {
         .then(response => response.text())
         .then(html => {
           const modal = document.getElementById("client-modal");
-
-          document.getElementById("modal-body").innerHTML = html;
-
+          document.getElementById("modal-content").innerHTML = html;
           modal.classList.remove("hidden");
-        })
 
-        const { lat, lng } = e.latlng;
+          const submitButton = document.getElementById("save-client-button");
+          submitButton.addEventListener("click", () => {
+            const nameInput = document.getElementById("client-name-input");
+            const phoneInput = document.getElementById("client-phone-input");
+
+            const nameErrorMsg = document.getElementById("name-input-error");
+            const phoneErrorMsg = document.getElementById("phone-input-error");
+
+            if (!nameInput.value.trim()) {
+              nameErrorMsg.classList.remove("hidden");
+              nameInput.classList.add("border-red-500");
+              return;
+            } else {
+              nameErrorMsg.classList.add("hidden");
+              nameInput.classList.remove("border-red-500");
+            }
+
+            if (isNaN(phoneInput.value.trim())) {
+              phoneErrorMsg.classList.remove("hidden");
+              phoneInput.classList.add("border-red-500");
+              return;
+            } else {
+              phoneErrorMsg.classList.add("hidden");
+              phoneInput.classList.remove("border-red-500");
+            }
+
+            renderNewClient(e, nameInput.value, phoneInput.value)
+            closeModal()
+
+          })
+        })
+      }
+    };
+async function renderNewClient(e, name, phoneNumber) {
+  const { lat, lng } = e.latlng;
         const address = await getAddressFromCoords(lat, lng);
 
         const colorMap = { green: 0, orange: 1, red: 2 };
@@ -1065,6 +1096,8 @@ function RenderClient(jsonData) {
             latitude: lat,
             longitude: lng,
             color: colorValue,
+            name: name,
+            phone_number: phoneNumber
           }),
         });
 
@@ -1077,9 +1110,7 @@ function RenderClient(jsonData) {
 
         const data = await response.json();
         RenderClient(data)
-      }
-    };
-
+}
 
 
 async function getAddressFromCoords(lat, lon) {
@@ -1104,12 +1135,12 @@ async function getAddressFromCoords(lat, lon) {
   };
 
 
-function openClientModal(clientId) {
+function openDetailModal(clientId) {
   fetch(`/clients/${clientId}/detail/`)
     .then(response => response.text())
     .then(html => {
       const modal = document.getElementById('client-modal');
-      document.getElementById('modal-body').innerHTML = html;
+      document.getElementById('modal-content').innerHTML = html;
 
       const paymentInput = document.getElementById("modal-payment-input");
       const dateInput = document.getElementById("modal-date-input");
@@ -1204,10 +1235,10 @@ function openClientModal(clientId) {
     });
 }
 
-function closeClientModal() {
+function closeModal() {
   const modal = document.getElementById('client-modal');
   modal.classList.add('hidden');
-  document.getElementById('modal-body').innerHTML = '';
+  document.getElementById('modal-content').innerHTML = '';
 }
 
 document.getElementById('toggle-client-sidebar').addEventListener('click', () => {
@@ -1221,11 +1252,7 @@ document.getElementById('toggle-client-sidebar').addEventListener('click', () =>
 </script>
 
 <div id="client-modal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeClientModal()">×</button>
-    <div id="modal-body">
-      <!-- Dynamic client detail HTML goes here -->
-    </div>
+  <div class="modal-content" id="modal-content">
   </div>
 </div>
 

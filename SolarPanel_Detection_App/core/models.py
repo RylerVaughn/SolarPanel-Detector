@@ -9,6 +9,7 @@ class Client(models.Model):
     latitude = models.FloatField(default=0)
     color = models.IntegerField(default=0)
     name = models.CharField(max_length=100, default="Null")
+    phone_number = models.CharField(max_length=15, default='')
     
     def __str__(self):
         return self.name

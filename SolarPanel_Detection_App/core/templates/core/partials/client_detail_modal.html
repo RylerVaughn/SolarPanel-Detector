@@ -1,76 +1,81 @@
-<div class="p-6 space-y-6 text-center bg-[#181818] text-gray-200 rounded-lg shadow-lg">
-  <!-- Client Info -->
-  <div class="space-y-1">
-    <h3 class="text-2xl font-bold text-green-400">{{ client.name }}</h3>
-    <p><span class="font-semibold text-gray-400">Address:</span> {{ client.address }}</p>
-    <p><span class="font-semibold text-gray-400">Notes:</span> {{ client.notes }}</p>
-  </div>
 
-  <!-- Job List -->
-  <div>
-    <h3 class="text-lg font-semibold text-green-300 mb-3">Jobs</h3>
-
-    {% if client.jobs.all %}
-      <div class="overflow-x-auto" id="jobs-modal-table">
-        <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
-          <thead class="bg-[#202020] text-gray-300">
-            <tr>
-              <th class="px-4 py-2 border-b border-gray-700">Price</th>
-              <th class="px-4 py-2 border-b border-gray-700">Date</th>
-            </tr>
-          </thead>
-          <tbody id="client-jobs-container">
-            {% for job in client.jobs.all %}
-              <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors">
-                <td class="px-4 py-2 border-b border-gray-800 text-green-300">${{ job.payment }}</td>
-                <td class="px-4 py-2 border-b border-gray-800">{{ job.date|date:"M d, Y" }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  <button class="modal-close" onclick="closeModal()">×</button>
+  <div id="modal-body">
+    <div class="p-6 space-y-6 text-center bg-[#181818] text-gray-200 rounded-lg shadow-lg">
+      <!-- Client Info -->
+      <div class="space-y-1">
+        <h3 class="text-2xl font-bold text-green-400">{{ client.name }}</h3>
+        <p><span class="font-semibold text-gray-400">Address:</span> {{ client.address }}</p>
+        <p><span class="font-semibold text-gray-400">Notes:</span> {{ client.notes }}</p>
       </div>
-    {% else %}
-      <div class="overflow-x-auto hidden" id="jobs-modal-table">
-        <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
-          <thead class="bg-[#202020] text-gray-300">
-            <tr>
-              <th class="px-4 py-2 border-b border-gray-700">Price</th>
-              <th class="px-4 py-2 border-b border-gray-700">Date</th>
-            </tr>
-          </thead>
-          <tbody id="client-jobs-container">
-          </tbody>
-        </table>
+
+      <!-- Job List -->
+      <div>
+        <h3 class="text-lg font-semibold text-green-300 mb-3">Jobs</h3>
+
+        {% if client.jobs.all %}
+          <div class="overflow-x-auto" id="jobs-modal-table">
+            <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
+              <thead class="bg-[#202020] text-gray-300">
+                <tr>
+                  <th class="px-4 py-2 border-b border-gray-700">Price</th>
+                  <th class="px-4 py-2 border-b border-gray-700">Date</th>
+                </tr>
+              </thead>
+              <tbody id="client-jobs-container">
+                {% for job in client.jobs.all %}
+                  <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors">
+                    <td class="px-4 py-2 border-b border-gray-800 text-green-300">${{ job.payment }}</td>
+                    <td class="px-4 py-2 border-b border-gray-800">{{ job.date|date:"M d, Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="overflow-x-auto hidden" id="jobs-modal-table">
+            <table class="w-full max-w-md mx-auto border border-gray-700 rounded-lg shadow-inner text-left">
+              <thead class="bg-[#202020] text-gray-300">
+                <tr>
+                  <th class="px-4 py-2 border-b border-gray-700">Price</th>
+                  <th class="px-4 py-2 border-b border-gray-700">Date</th>
+                </tr>
+              </thead>
+              <tbody id="client-jobs-container">
+              </tbody>
+            </table>
+          </div>
+          <p id="no-jobs-modal-indicator" class="text-sm text-gray-400">No jobs yet.</p>
+        {% endif %}
       </div>
-      <p id="no-jobs-modal-indicator" class="text-sm text-gray-400">No jobs yet.</p>
-    {% endif %}
+
+      <!-- Add Job Form -->
+      <div class="space-y-3">
+        <input
+          type="number"
+          name="payment"
+          id="modal-payment-input"
+          placeholder="Payment"
+          required
+          class="w-full max-w-md mx-auto px-3 py-2 bg-[#222] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <p class="text-red-500 text-sm mt-1 hidden" id="payment-input-error">This field is required.</p>
+        <input
+          type="date"
+          name="date"
+          id="modal-date-input"
+          required
+          class="w-full max-w-md mx-auto px-3 py-2 bg-[#222] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <p class="text-red-500 text-sm mt-1 hidden" id="date-input-error">This field is required.</p>
+        <button
+          type="submit"
+          id="modal-submit-button"
+          class="w-full max-w-md mx-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200"
+        >
+          Add Job
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Add Job Form -->
-  <div class="space-y-3">
-    <input
-      type="number"
-      name="payment"
-      id="modal-payment-input"
-      placeholder="Payment"
-      required
-      class="w-full max-w-md mx-auto px-3 py-2 bg-[#222] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-    />
-    <p class="text-red-500 text-sm mt-1 hidden" id="payment-input-error">This field is required.</p>
-    <input
-      type="date"
-      name="date"
-      id="modal-date-input"
-      required
-      class="w-full max-w-md mx-auto px-3 py-2 bg-[#222] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-    />
-    <p class="text-red-500 text-sm mt-1 hidden" id="date-input-error">This field is required.</p>
-    <button
-      type="submit"
-      id="modal-submit-button"
-      class="w-full max-w-md mx-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200"
-    >
-      Add Job
-    </button>
-  </div>
-</div>
