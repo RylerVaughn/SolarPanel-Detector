@@ -134,7 +134,7 @@
     }
   
 
-    #marker-buttons {
+    #toggle-marker-mode {
       background: var(--button-bg);
       border: 1.5px solid var(--input-border);
       color: var(--text-color);
@@ -149,7 +149,7 @@
       flex-direction: column;
       position: relative;
     }
-    #marker-buttons:hover {
+    #toggle-marker-mode:hover {
       background: var(--button-hover-bg);
       box-shadow: 0 0 10px var(--accent-glow);
     }
@@ -644,9 +644,7 @@
     </div>
     <div id="default-view-buttons">
       <button id="toggle-client-sidebar" style="margin-left: 16px;">☰ Clients</button>
-      <div id="marker-buttons">
         <button id="toggle-marker-mode">Drop Marker</button>
-    </div>
     <div id="marker-color-menu" class="hidden">
       <button onclick="setMarkerColor('red')" id="red-toggle">Red</button>
       <button onclick="setMarkerColor('orange')" id="orange-toggle">Orange</button>
@@ -694,7 +692,7 @@ async function loadSavedClients() {
 async function renderClientInSidebar(data) {
   const clientSidebarList = document.getElementById("client-list");
 
-  const { id, latitude, longitude, address, last_accessed, color, name, jobs } = data;
+  const { id, latitude, longitude, address, last_accessed, color, name, phone_number, jobs} = data;
 
       const clientEntry = document.createElement("li");
       clientEntry.classList.add("client-entry");
@@ -950,7 +948,7 @@ function RenderClient(jsonData) {
   function showSearchView(show) {
 
     const clientSidebarToggle = document.getElementById("toggle-client-sidebar");
-    const dropMarkerToggle = document.getElementById("marker-buttons");
+    const dropMarkerToggle = document.getElementById("toggle-marker-mode");
 
     if (show) {
     const colorMenu = document.getElementById("marker-color-menu");
