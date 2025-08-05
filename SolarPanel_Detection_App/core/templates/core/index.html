@@ -453,9 +453,6 @@
     background: linear-gradient(145deg, #1c1c1c, #111);
     border: 1px solid #333;
     border-radius: 14px;
-    box-shadow:
-      0 0 14px rgba(74, 222, 128, 0.5),
-      inset 0 0 10px rgba(74, 222, 128, 0.1);
     color: var(--text-color);
     max-width: 600px;
     width: 90%;
@@ -685,6 +682,17 @@ async function loadSavedClients() {
 
   } catch (error) {
     console.error('Error loading clients:', error);
+  }
+}
+
+function modifyClientReprInSidebar(clientId, name, address) {
+  const clientList = document.getElementById("client-list");
+  for (let child of clientList.children) {
+    if (child.getAttribute("id") == clientId) {
+      child.children[0].textContent = name;
+      child.children[2].textContent = address;
+      return;
+    }
   }
 }
 
@@ -1042,8 +1050,8 @@ function RenderClient(jsonData) {
           document.getElementById("modal-content").innerHTML = html;
           modal.classList.remove("hidden");
 
-          const submitButton = document.getElementById("save-client-button");
-          submitButton.addEventListener("click", () => {
+          const jobSubmitButton = document.getElementById("save-client-button");
+          jobSubmitButton.addEventListener("click", () => {
             const nameInput = document.getElementById("client-name-input");
             const phoneInput = document.getElementById("client-phone-input");
 
@@ -1142,25 +1150,29 @@ function openDetailModal(clientId) {
 
       const paymentInput = document.getElementById("modal-payment-input");
       const dateInput = document.getElementById("modal-date-input");
-      const submitButton = document.getElementById("modal-submit-button");
+      const jobSubmitButton = document.getElementById("modal-submit-button");
       const paymentErrorMsg = document.getElementById("payment-input-error");
       const dateErrorMsg = document.getElementById("date-input-error");
 
+      const clientName = document.getElementById("modal-client-name-display");
+      const clientNumber = document.getElementById("modal-client-phone-number-display");
+      const clientAddress = document.getElementById("modal-client-address-display");
+      const clientNotes = document.getElementById("modal-notes-display");
+
+      const clientNameInput = document.getElementById("modal-client-name-input");
+      const clientNumberInput = document.getElementById("modal-client-phone-number-input");
+      const clientAddressInput = document.getElementById("modal-client-address-input");
+      const clientNotesInput = document.getElementById("modal-notes-input");
+
       const editButton = document.getElementById("modal-edit-button");
+      const editSubmitButton = document.getElementById("modal-edit-submit-button");
       editButton.addEventListener("click", () => {
         editMode = !editMode;
 
-        const clientName = document.getElementById("modal-client-name-display");
-        const clientNumber = document.getElementById("modal-client-phone-number-display");
-        const clientAddress = document.getElementById("modal-client-address-display");
-        const clientNotes = document.getElementById("modal-notes-display");
-
-        const clientNameInput = document.getElementById("modal-client-name-input");
-        const clientNumberInput = document.getElementById("modal-client-phone-number-input");
-        const clientAddressInput = document.getElementById("modal-client-address-input");
-        const clientNotesInput = document.getElementById("modal-notes-input");
-
         if (editMode) {
+          editButton.textContent = "Back";
+          editSubmitButton.classList.remove("hidden");
+
           clientNameInput.classList.remove("hidden");
           clientNameInput.value = clientName.textContent;
           clientName.classList.add("hidden");
@@ -1180,11 +1192,70 @@ function openDetailModal(clientId) {
             clientNotesInput.value = clientNotes.value;
           }
           clientNotes.classList.add("hidden");
+        } else {
+          editButton.textContent = "✏️ Edit";
+          editSubmitButton.classList.add("hidden");
+          // name input swap
+          clientNameInput.classList.add("hidden");
+          clientName.classList.remove("hidden");
+          // client number input swap
+          clientNumberInput.classList.add("hidden");
+          clientNumber.classList.remove("hidden");
+          // address input swap
+          clientAddressInput.classList.add("hidden");
+          clientAddress.classList.remove("hidden");
+          // notes input swap
+          clientNotesInput.classList.add("hidden");
+          clientNotes.classList.remove("hidden");
         }
-       
       })
 
-      submitButton.addEventListener("click", async () => {
+      editSubmitButton.addEventListener("click", () => {
+        try {
+          const response = fetch(`api/clients/${clientId}/`, {
+            method: "PATCH",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: clientNameInput.value,
+              phone_number: clientNumberInput.value,
+              address: clientAddressInput.value,
+              notes: clientNotesInput.value
+            })
+          })
+
+          if (!response) {
+            alert("Something went wrong when trying to submit the changes, check the console for more details.");
+            console.log("Failed PATCH request:", response);
+            return;
+          }
+        } catch (error) {
+          alert("Something went wrong when trying to submit the changes, check the console for more details.");
+          console.log("Error during PATCH fetch request:", error);
+          return;
+        }
+        editButton.textContent = "✏️ Edit";
+        editSubmitButton.classList.add("hidden");
+        // Change name display
+        clientNameInput.classList.add("hidden");
+        clientName.textContent = clientNameInput.value;
+        clientName.classList.remove("hidden");
+        // Change client number display
+        clientNumberInput.classList.add("hidden");
+        clientNumber.textContent = clientNumberInput.value;
+        clientNumber.classList.remove("hidden");
+        // Change client address display
+        clientAddressInput.classList.add("hidden");
+        clientAddress.textContent = clientAddressInput.value;
+        clientAddress.classList.remove("hidden");
+        // Change client notes display
+        clientNotesInput.classList.add("hidden");
+        clientNotes.textContent = clientNotesInput.value;
+        clientNotes.classList.remove("hidden");
+
+        modifyClientReprInSidebar(clientId, clientName.textContent, clientAddress.textContent);
+      })
+
+      jobSubmitButton.addEventListener("click", async () => {
 
         if (!paymentInput.value.trim() || isNaN(paymentInput.value)) {
           paymentErrorMsg.classList.remove("hidden");
