@@ -428,7 +428,6 @@
     transform: translateX(100%);
   }
 
-  /* Modal overlay and animation */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -1121,7 +1120,7 @@ async function getAddressFromCoords(lat, lon) {
   }
 }
 
-
+ 
 
       map.on('click', markerClickHandler);
     } else {
@@ -1132,6 +1131,7 @@ async function getAddressFromCoords(lat, lon) {
     }
   };
 
+let editMode = false;
 
 function openDetailModal(clientId) {
   fetch(`/clients/${clientId}/detail/`)
@@ -1145,6 +1145,44 @@ function openDetailModal(clientId) {
       const submitButton = document.getElementById("modal-submit-button");
       const paymentErrorMsg = document.getElementById("payment-input-error");
       const dateErrorMsg = document.getElementById("date-input-error");
+
+      const editButton = document.getElementById("modal-edit-button");
+      editButton.addEventListener("click", () => {
+        editMode = !editMode;
+
+        const clientName = document.getElementById("modal-client-name-display");
+        const clientNumber = document.getElementById("modal-client-phone-number-display");
+        const clientAddress = document.getElementById("modal-client-address-display");
+        const clientNotes = document.getElementById("modal-notes-display");
+
+        const clientNameInput = document.getElementById("modal-client-name-input");
+        const clientNumberInput = document.getElementById("modal-client-phone-number-input");
+        const clientAddressInput = document.getElementById("modal-client-address-input");
+        const clientNotesInput = document.getElementById("modal-notes-input");
+
+        if (editMode) {
+          clientNameInput.classList.remove("hidden");
+          clientNameInput.value = clientName.textContent;
+          clientName.classList.add("hidden");
+
+          clientNumberInput.classList.remove("hidden");
+          if (clientNumber.textContent) {
+            clientNumberInput.value = clientNumber.textContent;
+          }
+          clientNumber.classList.add("hidden");
+
+          clientAddressInput.classList.remove("hidden");
+          clientAddressInput.value = clientAddress.textContent;
+          clientAddress.classList.add("hidden");
+
+          clientNotesInput.classList.remove("hidden");
+          if (clientNotes.value) {
+            clientNotesInput.value = clientNotes.value;
+          }
+          clientNotes.classList.add("hidden");
+        }
+       
+      })
 
       submitButton.addEventListener("click", async () => {
 
