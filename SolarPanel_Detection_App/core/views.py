@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404  
 from .models import Client, Job
-from .serializers import ClientSerializer
+from .serializers import ClientSerializer, JobSerializer
 from rest_framework import viewsets
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +14,10 @@ def index(request):
 class ClientViewSets(viewsets.ModelViewSet):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
+class JobViewSets(viewsets.ModelViewSet):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
 
 def client_detail_modal(request, client_id):
     client = get_object_or_404(Client, id=client_id)
