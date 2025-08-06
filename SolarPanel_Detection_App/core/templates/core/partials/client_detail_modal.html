@@ -114,7 +114,9 @@
                     <td class="px-4 py-2 border-b border-gray-800 hidden">
                       <button
                         class="remove-job-button px-3 py-1 text-sm text-red-400 hover:text-white border border-red-500 hover:bg-red-600 bg-[#202020] rounded-md transition duration-150"
-                        title="Remove Job">
+                        title="Remove Job"
+                        data-toggled="false"
+                      >
                         🗑 Remove
                       </button>
                     </td>
@@ -157,7 +159,13 @@
                     />
                 </tr>
 
-                <td class="px-4 py-2 border-b border-gray-800 hidden"><button id="remove-job-button">Remove</button></td>
+                <button
+                  class="remove-job-button px-3 py-1 text-sm text-red-400 hover:text-white border border-red-500 hover:bg-red-600 bg-[#202020] rounded-md transition duration-150"
+                  title="Remove Job"
+                  data-toggled="false"
+                >
+                  🗑 Remove
+                </button>
               {% endfor %}
             </tbody>
           </table>

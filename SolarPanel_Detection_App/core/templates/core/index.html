@@ -1214,6 +1214,7 @@ function openDetailModal(clientId) {
           clientNotes.classList.remove("hidden");
 
           revertJobEditInputs();
+          uninitializeJobRemoveButtonEventListeners();
         }
       })
 
@@ -1240,6 +1241,30 @@ function openDetailModal(clientId) {
           console.log("Error during PATCH fetch request:", error);
           return;
         }
+
+
+        try {
+          for (let jobData of cachedJobRemovals) {
+            const jobId = jobData["jobId"];
+
+            console.log(cachedJobRemovals);
+            console.log(jobData);
+
+            const response = fetch(`api/jobs/${jobId}/`, {
+              method: "DELETE",
+            });
+
+            if (!response) {
+              alert("Something went wrong when trying to delete some client jobs, check the console for more details.");
+              console.log("Error, request failed to delete client jobs:", response)
+            }
+          }
+        } catch (error) {
+          alert("Something went wrong when trying to delete the clients jobs, check the console for more details.");
+          console.log("Error, something failed during the deletion of the client jobs:", error);
+        }
+
+      // Swap out input elements for display elements in the client info section:
         editButton.textContent = "✏️ Edit";
         editSubmitButton.classList.add("hidden");
         // Change name display
@@ -1260,6 +1285,15 @@ function openDetailModal(clientId) {
         clientNotes.classList.remove("hidden");
 
         modifyClientReprInSidebar(clientId, clientName.textContent, clientAddress.textContent);
+
+      // Swap out job input elements for display elements and revert data structures and event listeners.
+          revertJobEditInputs();
+          uninitializeJobRemoveButtonEventListeners();
+          for (let jobData of cachedJobRemovals) {
+            const jobElement = jobData["jobObject"];
+            jobElement.remove()
+          }
+          cachedJobRemovals.length = 0;
       })
 
       jobSubmitButton.addEventListener("click", async () => {
@@ -1349,20 +1383,70 @@ function openDetailModal(clientId) {
     });
 }
 
+const activeJobRemoveEventListeners = new Map();
+
+function uninitializeJobRemoveButtonEventListeners() {
+  const jobListElement = document.getElementById("client-jobs-container");
+  for (let job of jobListElement.children) {
+    const button = job.children[4].children[0];
+    const jobId = job.getAttribute("id");
+    const handler = activeJobRemoveEventListeners.get(jobId);
+
+    button.classList.remove('text-white', 'bg-red-600');
+    button.classList.add('text-red-400', 'bg-[#202020]');
+    button.setAttribute('data-toggled', 'false');
+
+    if (handler) {
+      button.removeEventListener("click", handler);
+    }
+  }
+  activeJobRemoveEventListeners.clear()
+}
+
 function initializeJobRemoveButtonEventListeners() {
   const jobListElement = document.getElementById("client-jobs-container");
 
-  for (let job in jobListElement.children) {
-    job.children[4].addEventListener("click", () => {
-      let jobId = job.getAttribute("id");
+  for (let job of jobListElement.children) {
+    let button = job.children[4].children[0];
+    const jobId = job.getAttribute("id");
+
+    const removeJobHandler = () => {
+
       let jobIds = {
         'jobObject': job,
         'jobId': jobId
       };
-      cachedJobRemovals.append(jobIds);
 
-      
-    })
+      let exists = cachedJobRemovals.some(dict => dict["jobId"] == jobIds["jobId"]);
+
+      if (!exists) {
+        cachedJobRemovals.push(jobIds);
+      } else {
+        cachedJobRemovals = cachedJobRemovals.filter(instance => instance["jobId"] != jobIds["jobId"]);
+      }
+
+      console.log(cachedJobRemovals);
+
+      const isToggled = button.getAttribute('data-toggled') === 'true';
+
+      console.log(isToggled);
+
+      if (!isToggled) {
+        // Make it look like hover state
+        button.classList.remove('text-red-400', 'bg-[#202020]');
+        button.classList.add('text-white', 'bg-red-600');
+        button.setAttribute('data-toggled', 'true');
+      } else {
+        // Revert to normal state
+        button.classList.remove('text-white', 'bg-red-600');
+        button.classList.add('text-red-400', 'bg-[#202020]');
+        button.setAttribute('data-toggled', 'false');
+      }
+
+    }
+
+    activeJobRemoveEventListeners.set(jobId, removeJobHandler);
+    button.addEventListener("click", removeJobHandler);
   }
 }
 
