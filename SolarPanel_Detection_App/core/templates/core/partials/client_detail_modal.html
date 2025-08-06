@@ -90,9 +90,12 @@
             </thead>
             <tbody id="client-jobs-container">
               {% for job in client.jobs.all %}
-                <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors">
+                <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors" id={{ job.id }}>
                   <td class="px-4 py-2 border-b border-gray-800 text-green-300">${{ job.payment }}</td>
                   <td class="px-4 py-2 border-b border-gray-800">{{ job.date|date:"M d, Y" }}</td>
+
+                  <td class="px-4 py-2 border-b border-gray-800 text-green-300 hidden"><input type="number" value="{{job.payment}}"/></td>
+                  <td class="px-4 py-2 border-b border-gray-800 hidden"><input type="date" value="{{job.date}}"/></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -112,6 +115,9 @@
                 <tr class="bg-[#1c1c1c] hover:bg-[#222] transition-colors">
                   <td class="px-4 py-2 border-b border-gray-800 text-green-300">${{ job.payment }}</td>
                   <td class="px-4 py-2 border-b border-gray-800">{{ job.date|date:"M d, Y" }}</td>
+
+                  <td class="px-4 py-2 border-b border-gray-800 text-green-300 hidden"><input type="number" value="{{job.payment}}"/></td>
+                  <td class="px-4 py-2 border-b border-gray-800 hidden"><input type="date" value="{{job.date}}"/></td>
                 </tr>
               {% endfor %}
             </tbody>

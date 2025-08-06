@@ -1164,6 +1164,8 @@ function openDetailModal(clientId) {
       const clientAddressInput = document.getElementById("modal-client-address-input");
       const clientNotesInput = document.getElementById("modal-notes-input");
 
+      clientJobsList = document.getElementById("client-jobs-container");
+
       const editButton = document.getElementById("modal-edit-button");
       const editSubmitButton = document.getElementById("modal-edit-submit-button");
       editButton.addEventListener("click", () => {
@@ -1192,6 +1194,9 @@ function openDetailModal(clientId) {
             clientNotesInput.value = clientNotes.value;
           }
           clientNotes.classList.add("hidden");
+
+          displayJobEditInputs(clientJobsList);
+
         } else {
           editButton.textContent = "✏️ Edit";
           editSubmitButton.classList.add("hidden");
@@ -1353,6 +1358,15 @@ document.getElementById('toggle-client-sidebar').addEventListener('click', () =>
   sidebar.classList.remove("hidden");
   sidebar.classList.toggle('closed');
 });
+
+function displayJobEditInputs(jobListElement) {
+  for (let jobRow of jobListElement.children) {
+    jobRow.children[0].classList.add("hidden");
+    jobRow.children[1].classList.add("hidden");
+    jobRow.children[2].classList.remove("hidden");
+    jobRow.children[3].classList.remove("hidden");
+  }
+}
 
 
 
