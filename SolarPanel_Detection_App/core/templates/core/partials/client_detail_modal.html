@@ -1,5 +1,4 @@
-<!-- Close Button -->
-<!-- <button class="modal-close" onclick="closeModal()">×</button> -->
+
 
 <div id="modal-body" class="relative">
   <!-- Edit Button (moved outside scroll area, top-right but away from close button) -->
@@ -34,7 +33,8 @@
             class="hidden w-full mt-2 px-3 py-2 bg-[#111] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>
-
+<!-- Close Button -->
+<!-- <button class="modal-close" onclick="closeModal()">×</button> -->
         <!-- Phone -->
         <div>
           <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Phone</p>
@@ -111,7 +111,13 @@
                       class="w-full px-3 py-2 bg-[#222] text-gray-100 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
 
-                    <td class="px-4 py-2 border-b border-gray-800 hidden"><button id="remove-job-button">Remove</button></td>
+                    <td class="px-4 py-2 border-b border-gray-800 hidden">
+                      <button
+                        class="remove-job-button px-3 py-1 text-sm text-red-400 hover:text-white border border-red-500 hover:bg-red-600 bg-[#202020] rounded-md transition duration-150"
+                        title="Remove Job">
+                        🗑 Remove
+                      </button>
+                    </td>
                   </td>
                 </tr>
               {% endfor %}
