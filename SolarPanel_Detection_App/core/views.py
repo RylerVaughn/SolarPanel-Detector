@@ -30,9 +30,9 @@ def add_job(request, client_id):
     payment = request.POST.get("payment")
     date = request.POST.get("date")
 
-    Job.objects.create(client=client, payment=payment, date=date)
+    job = Job.objects.create(client=client, payment=payment, date=date)
  
-    return JsonResponse({"status": 200})
+    return JsonResponse({"job_id": job.id})
 
 
 def add_client(request):

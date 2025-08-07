@@ -1219,6 +1219,9 @@ function openDetailModal(clientId) {
       })
 
       editSubmitButton.addEventListener("click", () => {
+
+        editMode = !editMode;
+
         try {
           const response = fetch(`api/clients/${clientId}/`, {
             method: "PATCH",
@@ -1246,9 +1249,6 @@ function openDetailModal(clientId) {
         try {
           for (let jobData of cachedJobRemovals) {
             const jobId = jobData["jobId"];
-
-            console.log(cachedJobRemovals);
-            console.log(jobData);
 
             const response = fetch(`api/jobs/${jobId}/`, {
               method: "DELETE",
@@ -1332,8 +1332,11 @@ function openDetailModal(clientId) {
           const data = await response.json();
 
           if (response.ok) {
+            const jobId = data["job_id"];
+
             const row = document.createElement("tr");
             row.classList.add("bg-[#1c1c1c]", "hover:bg-[#222]",  "transition-colors");
+            row.setAttribute("id", jobId);
 
             const paymentInfo = document.createElement("td");
             paymentInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800", "text-green-300");
@@ -1349,8 +1352,36 @@ function openDetailModal(clientId) {
             dateInfo.classList.add("px-4", "py-2", "border-b", "border-gray-800");
             dateInfo.textContent = formatted;
 
+            const paymentEditInputRow = document.createElement("td");
+            paymentEditInputRow.classList.add("px-4", "py-2", "border-b", "border-gray-800", "hidden");
+            const paymentEditInput = document.createElement("input");
+            paymentEditInput.setAttribute("type", "number");
+            paymentEditInput.setAttribute("value", paymentInput.value);
+            paymentEditInput.classList.add("w-full", "px-3", "py-2", "bg-[#222]", "text-gray-100", "border", "border-gray-700", "rounded-md", "focus:outline-none", "focus:ring-2", "focus:ring-green-500");
+            paymentEditInputRow.append(paymentEditInput);
+
+            const dateEditInputRow = document.createElement("td");
+            dateEditInputRow.classList.add("px-4", "py-2", "border-b", "border-gray-800", "hidden");
+            const dateEditInput = document.createElement("input");
+            dateEditInput.setAttribute("type", "date");
+            dateEditInput.setAttribute("value", formatted);
+            dateEditInput.classList.add("w-full", "px-3", "py-2", "bg-[#222]", "text-gray-100", "border", "border-gray-700", "rounded-md", "focus:outline-none", "focus:ring-2", "focus:ring-green-500");
+            dateEditInputRow.append(dateEditInput);
+
+            const jobRemoveButtonRow = document.createElement("td");
+            jobRemoveButtonRow.classList.add("px-4", "py-2", "border-b", "border-gray-800", "hidden");
+            const jobRemoveButton = document.createElement("button");
+            jobRemoveButton.setAttribute("title", "Remove Job");
+            jobRemoveButton.setAttribute("data-toggled", "false");
+            jobRemoveButton.classList.add("remove-job-button", "px-3", "py-1", "text-sm", "text-red-400Z", "hover:text-white", "border", "border-red-500", "hover:bg-red-600", "bg-[#202020]", "rounded-md", "transition", "duration-150");
+            jobRemoveButton.textContent = "🗑 Remove";
+            jobRemoveButtonRow.append(jobRemoveButton);
+
             row.append(paymentInfo);
             row.append(dateInfo);
+            row.append(paymentEditInputRow);
+            row.append(dateEditInputRow);
+            row.append(jobRemoveButtonRow);
             jobContainer.append(row);
 
             dateInput.value = null;
